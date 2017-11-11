@@ -7,7 +7,7 @@ from dijkstra import Dijkstra, DijkstraMatrix
 # def read_map(file_name):
 
 info = np.zeros(7)
-f = open('./CARP_samples/egl-e1-A.dat')
+f = open('./CARP_samples/simple.dat')
 lines = f.readlines()
 
 # Read map info to numpy array info
@@ -44,7 +44,7 @@ print(sum(edge.cost for edge in G.iteredges()))
 
 algorithm = DijkstraMatrix(G)
 algorithm.run(1)
-print(algorithm.distance[77])
-print(algorithm.path(77))
+print(algorithm.distance[4])
+print(algorithm.path(4))
 
 
