@@ -1,27 +1,8 @@
 #!/usr/bin/python
 
+
 class Edge:
-    """The class defining a directed edge.
-    
-    Attributes
-    ----------
-    source : starting node
-    target : ending node
-    cost : number (edge cost)
-    
-    Examples
-    --------
-    >>> from edges import Edge
-    >>> edge = Edge(1, 2, 5)
-    >>> ~edge
-    Edge(2, 1, 5)
-
-    Notes
-    -----
-    Hashable edges - the idea for __hash__ from
-
-    http://stackoverflow.com/questions/793761/built-in-python-hash-function
-    """
+    """The class defining a directed edge."""
 
     def __init__(self, source, target, cost=1, demand=0):
         """Load up a directed edge instance.
@@ -73,12 +54,12 @@ class Edge:
 
     def __hash__(self):
         """Hashable edges."""
-        #return hash(repr(self))
-        return hash((self.source, self.target, self.cost))
+        # return hash(repr(self))
+        return hash((self.source, self.target, self.cost, self.demand))
 
     def __invert__(self):
         """Return the edge with the opposite direction."""
-        return self.__class__(self.target, self.source, self.cost)
+        return self.__class__(self.target, self.source, self.cost, self.demand)
 
     inverted = __invert__
 

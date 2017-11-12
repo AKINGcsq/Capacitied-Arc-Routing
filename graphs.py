@@ -111,7 +111,7 @@ class Graph(dict):
         return edge.source in self and edge.target in self[edge.source]
 
     def cost(self, edge):
-        """Return the edge weight or zero."""
+        """Return the edge cost or zero."""
         if edge.source in self and edge.target in self[edge.source]:
             return self[edge.source][edge.target].cost
         else:
