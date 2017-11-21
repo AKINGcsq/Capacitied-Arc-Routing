@@ -2,13 +2,12 @@ import numpy as np
 import os, sys
 from edges import Edge
 from graphs import Graph
-from dijkstra import Dijkstra, DijkstraMatrix
-
+from dijkstra import Dijkstra
+from random import randint
 
 # def read_map(file_name):
-
 info = np.zeros(7)
-f = open('./CARP_samples/simple.dat')
+f = open('./CARP_samples/egl-e1-A.dat')
 lines = f.readlines()
 
 # Read map info to numpy array info
@@ -16,7 +15,8 @@ lines = f.readlines()
 for i in range(1, 8):
     info[i-1] = lines[i].strip().split()[-1]
 f.close()
-info = info.astype(np.int64)
+info = info.astype(int)
+info = info.tolist()
 print(info)
 
 VERTICES = info[0]
@@ -26,7 +26,6 @@ NON_REQUIRED_EDGES = info[3]
 VEHICLES = info[4]
 CAPACITY = info[5]
 TOTAL_COST_OF_REQUIRED_EDGES = info[6]
-
 # Build the graph
 G = Graph(n=VERTICES, directed=False)
 
@@ -36,46 +35,67 @@ for i in range(9, REQUIRED_EDGES + NON_REQUIRED_EDGES + 9):
                     int(lines[i].strip().split()[2]),
                     int(lines[i].strip().split()[3])))
 
-print(list(G.iternodes()))
-print(G.show())
-print(sorted((G.degree(v) for v in G.iternodes()), reverse=True))
-print(list(v for v in G. iternodes() if G. degree(v) == 1))
-#print(sum(edge.cost for edge in G.iteredges()))
+# Initialize a shortest path matrix
+shortestPath = np.zeros((VERTICES + 1, VERTICES + 1))
+shortestPath = np.int_(shortestPath)
+for i in range(1, VERTICES+1):
+    algorithm = Dijkstra(G)
+    algorithm.run(i)
+    for j in range(i, VERTICES+1):
+        shortestPath[i][j] = algorithm.distance[j]
+shortestPath = np.maximum(shortestPath, shortestPath.transpose())
+shortestPath = shortestPath.tolist()
 
-#solution = [[(1, 2), (2, 4), (4, 1)], [(1, 4), (4, 3), (3, 1)]]
+INIT_R = []
+INIT_COST = []
+INIT_LOAD = []
 
+for i in range(1000):
+    # Tasks and inverse tasks
+    free = list([e.source, e.target] for e in G.iteredges() if e.demand != 0)
+    free_inv = list([e.target, e.source] for e in G.iteredges() if e.demand != 0)
+    task = free + free_inv
+    R = []
+    COST = []
+    LOAD = []
+    while True:
+        route = []
+        load = 0
+        cost = 0
+        current = DEPOT
+        while True:
+            d = np.inf
+            for u in task:
+                if load + G[u[0]][u[1]].demand <= CAPACITY:
+                    if shortestPath[current][u[0]] < d:
+                        d = shortestPath[current][u[0]]
+                        current_task = u
+                    elif shortestPath[current][u[0]] == d:
+                        rand = randint(0, 1)
+                        if rand == 0:
+                            current_task = u
+            if d != np.inf:
+                route.append(current_task)
+                task.remove(current_task)
+                task.remove(current_task[::-1])
+                load += G[current_task[0]][current_task[1]].demand
+                cost += shortestPath[current_task[0]][current_task[1]] + d
+                current = current_task[1]
+            if not task or d == np.inf:
+                break
+        cost += shortestPath[current][DEPOT]
+        R.append(route)
+        LOAD.append(load)
+        COST.append(cost)
+        if not task:
+            break
+    if sum(INIT_COST) == 0 or sum(COST) <= sum(INIT_COST):
+        INIT_R = R
+        INIT_COST = COST
+        INIT_LOAD = LOAD
 
-def calculate_cost(solution):
-    cost = 0
-    for route in solution:
-        for edge in route:
-            source, target = edge
-            cost += G[source][target].cost
-    print(cost)
-
-algorithm = Dijkstra(G)
-algorithm.run(1)
-print(algorithm.distance[4])
-
-print (algorithm.path(4))
-
-
-for dead in list(v for v in G. iternodes() if G. degree(v) == 1):
-    print(algorithm.path(dead))
-
-
-
-
-'''
-for source in G.iternodes():
-    for edge in G.iteroutedges(source):
-        while edge.demand != 0:
-            capacity_left = CAPACITY
-            if capacity_left >= edge.cost:
-                edge.cost = 0
-                capacity_left -= edge.cost
-            else:
-                edge.cost -= capacity_left
-                capacity_left = 0
-        print("%s(%s,%s)" % (edge.target, edge.cost, edge.demand))
-'''
+print(INIT_R)
+print(INIT_COST)
+print(INIT_LOAD)
+print(sum(INIT_COST))
+print(sum(INIT_LOAD))
